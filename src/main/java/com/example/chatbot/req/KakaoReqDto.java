@@ -9,6 +9,5 @@ public class KakaoReqDto {
     private Intent intent;
     private Bot bot;
     private Action action;
-    private UserRequset userRequset;
-    private Block block;
+    private UserRequset userRequest;
 }

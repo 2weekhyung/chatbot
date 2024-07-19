@@ -2,6 +2,8 @@ package com.example.chatbot.req;
 
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 public class QuickReplies {
 
@@ -12,6 +14,6 @@ public class QuickReplies {
    
    
    // 이건 내맘대로 타임변경 가능
-   private String extra;
+   private Map<String,Object> extra;
 
 }

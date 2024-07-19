@@ -16,7 +16,46 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.chatbot.mapper.ShopMapper">
 
+        <insert id="insertOrder"  parameterType="Producet">
+            INSERT into tbl_order(
+                ProductNo,BotUserId,ProductName
+                ,ProductImg,ProductPrict,
+                OrderPrice,OrderName
+                ,OrderPhone,OrderStatus
+                ,ReservrDate,OrderDate
+            )values(
+                    #{ProductNo},#{BotUserId},#{ProductName}
+                   ,#{ProductImg},#{ProductPrict}
+                   ,#{OrderPrice},#{OrderName}
+                   ,#{OrderPhone},#{OrderStatus}
+                   ,#{ReservrDate},NOW()
+                    )
+        </insert>
 
+        <select id="selectOrder" parameterType="Paging" resultType="Producet">
+            SELECT OrderNo,ProductNo,BotUserId,ProductName
+                 ,ProductImg,ProductPrict,
+                OrderPrice,OrderName
+                 ,OrderPhone,OrderStatus
+                 ,ReservrDate,OrderDate
+            From tbl_order
+            where BotUserId = #{BotUserId}
+                LIMIT #{endPage} OFFSET #{startPage}
+        </select>
 
+        <update id="updateOrder" parameterType="Producet">
+            update tbl_order
+            set  OrderStatus = #{OrderStatus}
+            where BotUserId = #{BotUserId} and OrderNo=#{OrderNo}
+        </update>
+
+    <select id="countOrder" parameterType="String" resultType="Integer">
+        SELECT count(*)
+        From tbl_order
+        where BotUserId = #{BotUserId}
+
+    </select>
 
 </mapper>
+
+

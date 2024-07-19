@@ -17,6 +17,7 @@
 <configuration>
     <typeAliases>
         <package name="com.example.chatbot.res"/>
+        <package name="com.example.chatbot.model"/>
     </typeAliases>
     <mappers>
         <mapper resource="mybatis/ShopMapper.xml"/>
