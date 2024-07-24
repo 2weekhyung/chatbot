@@ -10,6 +10,7 @@ public class Producet {
     private String ProductPrict;            // 상품설명
     private String ProductImg;              // 이미지 주소
     private int OrderPrice;                 // 상품 가격
+    private int DiscountPrice;              // 상품 할인 가격
 
     private String BotUserId;               // 유저 정보
     private String OrderName;               // 주문자 이름
@@ -21,12 +22,13 @@ public class Producet {
     public Producet(){}
 
 
-    public Producet(int ProductNo, String ProductName, String ProductPrict, int OrderPrice, String ProductImg)
+    public Producet( String ProductName, String ProductPrict, int OrderPrice,int DiscountPrice, String ProductImg)
     {
-        this.ProductNo = ProductNo;
+
         this.ProductName = ProductName;
         this.ProductPrict = ProductPrict;
         this.OrderPrice = OrderPrice;
+        this.DiscountPrice = DiscountPrice;
         this.ProductImg = ProductImg;
 
 

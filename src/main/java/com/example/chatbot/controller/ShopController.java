@@ -1,5 +1,6 @@
 package com.example.chatbot.controller;
 
+import com.example.chatbot.mapper.ShopMapper;
 import com.example.chatbot.model.*;
 import com.example.chatbot.req.*;
 import com.example.chatbot.res.*;
@@ -32,6 +33,8 @@ public class ShopController {
     private productService productService;
     @Autowired
     private ShopService shopService;
+    @Autowired
+    private ShopMapper shopMapper;
 
     /**
      * 쇼핑 메인화면(66864b145be16c33805ac6bb)
@@ -115,159 +118,98 @@ public class ShopController {
         KakaoCarouselCardtResDto  carousel = new KakaoCarouselCardtResDto();
         carousel.setType("commerceCard");
 
+        Paging paging = new Paging();
+
+        ////
+        String pageStr;
+        int currentPage =1;
+
+        ////
+        if (kareq.getAction() != null && kareq.getAction().getClientExtra() != null) {
+            Map<String,Object> extraMap = kareq.getAction().getClientExtra();
+            Object pageObj = extraMap.get("page");
+            if (pageObj != null) {
+                try {
+                    currentPage = Integer.parseInt(pageObj.toString());
+                } catch (NumberFormatException e) {
+                    log.info("Current page: " + e);
+
+                }
+            }
+        }
+
+        paging.setPage(currentPage);
+        log.info("Current page: " + currentPage);
+        ////
+
+        ////
+
+
+        // 전체 데이터 세기
+        paging.setTotalCnt(shopService.countProduct());
+        log.info("전체데이터  값 : " + paging.getTotalCnt());
+        // 전체 페이지 개수 구하기
+        int totalPage=paging.getPageCount(paging.getPageSize(),paging.getTotalCnt());
+        log.info("전체 페이지 값 : " + totalPage);
+        log.info("현재 페이지 값 : " + paging.getPage());
+        log.info("Start 페이지 값 : " + paging.getStartPage());
+        log.info("End 페이지 값 : " + paging.getEndPage());
+        //
+
         // 상품 정보 담을 리스트
         List<Object> Itmes = carousel.getItems();
-        
-        /////////////
-        KakaoCommerceCardResDto commerResDto = new KakaoCommerceCardResDto();
-        // 상품이름 및 설명
-        commerResDto.setTitle("오므라이스 키링");
-        commerResDto.setDescription("맛있는 키링 오므라이스☺");
-        commerResDto.setPrice(5000);
-        commerResDto.setCurrency("won");
-        commerResDto.setDiscount(500);
 
-        // 썸네일 설정
-        Thumbnail th = new Thumbnail();
-            th.setImageUrl("https://cdn.imweb.me/thumbnail/20240321/5be5d23c74bb9.png");
-            List<Thumbnail> Thumbnails = commerResDto.getThumbnails();
-            Thumbnails.add(th);
-        commerResDto.setThumbnails(Thumbnails);
+        List<Producet> producetList = shopService.selectProduct(paging);
+        for(Producet p : producetList) {
+            KakaoCommerceCardResDto commerResDto = new KakaoCommerceCardResDto();
 
-        // 프로필 설정
-        Profile pro = new Profile();
-            pro.setImageUrl("https://st.kakaocdn.net/shoppingstore/store/home/brand/20240522095824_a8c96efa9b7544158660ce85c6a1d99a.png");
-            pro.setNickname("춘식이");
-        commerResDto.setProfile(pro);
+            // 상품이름 및 설명
+            commerResDto.setTitle(p.getProductName());
+            commerResDto.setDescription(p.getProductPrict());
+            commerResDto.setPrice(p.getOrderPrice());
+            commerResDto.setCurrency("won");
+            commerResDto.setDiscount(p.getDiscountPrice());
 
+            // 썸네일 설정
+            Thumbnail th = new Thumbnail();
+                th.setImageUrl(p.getProductImg());
+                List<Thumbnail> Thumbnails = commerResDto.getThumbnails();
+                Thumbnails.add(th);
+            commerResDto.setThumbnails(Thumbnails);
 
-        // 버튼 설정
-        Button bu = new Button();
-            bu.setLabel("상품 상세보기");
-            bu.setAction("block");
-        bu.setBlockId(Block.detail);
+            // 프로필 설정
+            Profile pro = new Profile();
+                pro.setImageUrl("https://st.kakaocdn.net/shoppingstore/store/home/brand/20240522095824_a8c96efa9b7544158660ce85c6a1d99a.png");
+                pro.setNickname("춘식이");
+            commerResDto.setProfile(pro);
 
-        // extra ?
-        Map<String, Object> extra = new HashMap<>();
-            extra.put("Title",commerResDto.getTitle());
-            extra.put("userId",kareq.getUserRequest().getUser().getId());
+            // 버튼 설정
+            Button bu = new Button();
+                bu.setLabel("상품 상세보기");
+                bu.setAction("block");
+            bu.setBlockId(Block.detail);
 
-            extra.put("Description",commerResDto.getDescription());
-            extra.put("Price",commerResDto.getPrice());
-            extra.put("Discount",commerResDto.getDiscount());
-            extra.put("ImageUrl",th.getImageUrl());
-            extra.put("proNo",1);
-        bu.setExtra(extra);
+            // extra
+            Map<String, Object> extra = new HashMap<>();
+                extra.put("Title",commerResDto.getTitle());
+                extra.put("userId",kareq.getUserRequest().getUser().getId());
+                extra.put("Description",commerResDto.getDescription());
+                extra.put("Price",commerResDto.getPrice());
+                extra.put("Discount",commerResDto.getDiscount());
+                extra.put("ImageUrl",th.getImageUrl());
+                extra.put("proNo",p.getProductNo());
+            bu.setExtra(extra);
 
+            List<Button> buttons = new ArrayList<>();
+            buttons.add(bu);
+            commerResDto.setButtons(buttons);
 
-        List<Button> buttons = new ArrayList<>();
-        buttons.add(bu);
-        commerResDto.setButtons(buttons);
+            Itmes.add(commerResDto);
 
-        Itmes.add(commerResDto);
-        ///////////////
-
-        //두번째 상품
-        //////////////
-        KakaoCommerceCardResDto commerResDto1 = new KakaoCommerceCardResDto();
-        // 상품이름 및 설명
-        commerResDto1.setTitle("안경닦이 ");
-        commerResDto1.setDescription("6컷 춘식 안경닦이");
-        commerResDto1.setPrice(5000);
-        commerResDto1.setCurrency("won");
-        commerResDto1.setDiscount(500);
-
-        // 썸네일 설정
-        Thumbnail th1 = new Thumbnail();
-        th1.setImageUrl("https://st.kakaocdn.net/thumb/P750x750/?fname=https%3A%2F%2Fst.kakaocdn.net%2Fshoppingstore%2Fproduct%2F20240621172756_874016ce6bcf468e96095a37a4177d0f.jpg");
-        List<Thumbnail> Thumbnails1 = commerResDto1.getThumbnails();
-        Thumbnails1.add(th1);
-        commerResDto1.setThumbnails(Thumbnails1);
-
-        // 프로필 설정
-        Profile pro1 = new Profile();
-        pro1.setImageUrl("https://st.kakaocdn.net/shoppingstore/store/home/brand/20240304093026_c88ebabcad5849e48120613ac136fae6.jpg");
-        pro1.setNickname("춘식이");
-        commerResDto1.setProfile(pro1);
-
-        // 버튼 설정
-        Button bu1 = new Button();
-        bu1.setLabel("상품 상세보기");
-        bu1.setAction("block");
-        bu1.setBlockId(Block.detail);
-
-
-        // extra 설정
-        Map<String, Object> extra2 = new HashMap<>();
-            extra2.put("Title",commerResDto1.getTitle());
-            extra2.put("userId",kareq.getUserRequest().getUser().getId());
-            extra2.put("Description",commerResDto1.getDescription());
-            extra2.put("Price",commerResDto1.getPrice());
-            extra2.put("Discount",commerResDto1.getDiscount());
-            extra2.put("ImageUrl",th1.getImageUrl());
-            extra2.put("proNo",2);
-        bu1.setExtra(extra2);
-
-        List<Button> buttons1 = new ArrayList<>();
-        buttons1.add(bu1);
-        commerResDto1.setButtons(buttons1);
-
-        Itmes.add(commerResDto1);
-        //////////////
-
-
-        // 3번쨰 상품
-        //////////////
-        KakaoCommerceCardResDto commerResDto2 = new KakaoCommerceCardResDto();
-        // 상품이름 및 설명
-        commerResDto2.setTitle("쏘주 디스펜서");
-        commerResDto2.setDescription("춘식 소주 디스펜서!!");
-        commerResDto2.setPrice(5000);
-        commerResDto2.setCurrency("won");
-        commerResDto2.setDiscount(500);
-
-        // 썸네일 설정
-        Thumbnail th2 = new Thumbnail();
-        th2.setImageUrl("https://st.kakaocdn.net/thumb/R890x0/?fname=https%3A%2F%2Fst.kakaocdn.net%2Fshoppingstore%2Feditor%2F20240625171656_ddfb9390758c46dda5630a79ff432b08.jpg");
-        List<Thumbnail> Thumbnails2 = commerResDto2.getThumbnails();
-        Thumbnails2.add(th2);
-        commerResDto2.setThumbnails(Thumbnails2);
-
-        // 프로필 설정
-        Profile pro2 = new Profile();
-        pro2.setImageUrl("https://st.kakaocdn.net/thumb/C400x400/?fname=https%3A%2F%2Fst.kakaocdn.net%2Fshoppingstore%2Fstore%2F20240528180123_b9a6145839c346e3a34304f14163d941.png");
-        pro2.setNickname("춘식이");
-        commerResDto2.setProfile(pro2);
-
-
-        // 버튼 설정
-        Button bu2 = new Button();
-        bu2.setLabel("상품 상세보기");
-        bu2.setAction("block");
-        bu2.setBlockId(Block.detail);
-
-        // extra 설정
-        Map<String, Object> extra3 = new HashMap<>();
-            extra3.put("Title",commerResDto2.getTitle());
-            extra3.put("userId",kareq.getUserRequest().getUser().getId());
-            extra3.put("Description",commerResDto2.getDescription());
-            extra3.put("Price",commerResDto2.getPrice());
-            extra3.put("Discount",commerResDto2.getDiscount());
-            extra3.put("ImageUrl",th2.getImageUrl());
-            extra3.put("proNo",3);
-        bu2.setExtra(extra3);
-
-
-        List<Button> buttons2 = new ArrayList<>();
-        buttons2.add(bu2);
-        commerResDto2.setButtons(buttons2);
-
-        Itmes.add(commerResDto2);
-        /////////////
+        }
 
         calCardMap.put("carousel",carousel);
         outputs.add(calCardMap);
-
         // 퀵 버튼
         List<Object> Quicklist = kaTempResDto.getQuickReplies();
 
@@ -277,8 +219,57 @@ public class ShopController {
         bu3.setLabel("메인화면");
         bu3.setBlockId(Block.mainhome);
 
-        Quicklist.add(bu3);
+            // 첫 페이지거나 현재 페이지가 전체 페이지 수보다 적을 때
+            if (paging.getPage() == 1) {
+                log.info("첫 페이지");
 
+                log.info("다음 페이지 추가");
+                QuickReplies nextpage = new QuickReplies();
+                Map<String,Object> nextExtra = new HashMap<>();
+                nextExtra.put("page",paging.getPage() +1);
+                nextpage.setAction("block");
+                nextpage.setLabel("다음");
+                nextpage.setBlockId(Block.list);
+                nextpage.setExtra(nextExtra);
+                Quicklist.add(nextpage);
+                log.info("다음 버튼 눌러서 현재 페이지 +1");
+            }
+            // 현재 페이지가 마지막 페이지일 때
+            else if (paging.getPage() == totalPage) {
+                log.info("현재 페이지가 마지막 페이지");
+                QuickReplies previouspage = new QuickReplies();
+                Map<String,Object> previousExtra = new HashMap<>();
+                previousExtra.put("page",paging.getPage() - 1);
+                previouspage.setAction("block");
+                previouspage.setLabel("이전");
+                previouspage.setBlockId(Block.list);
+                Quicklist.add(previouspage);
+                log.info("다음 버튼 눌러서 현재 페이지 -1");
+            }
+            else {
+                log.info("다음 이전 버튼 둘다 있는 페이지");
+                QuickReplies previouspage = new QuickReplies();
+                Map<String,Object> previousExtra = new HashMap<>();
+                previousExtra.put("page",paging.getPage()-1);
+                previouspage.setAction("block");
+                previouspage.setLabel("이전");
+                previouspage.setBlockId(Block.list);
+                Quicklist.add(previouspage);
+                log.info("다음 버튼 눌러서 현재 페이지 -1");
+
+                QuickReplies nextpage = new QuickReplies();
+                Map<String,Object> nextExtra = new HashMap<>();
+                nextExtra.put("page",paging.getPage()+1);
+                nextpage.setAction("block");
+                nextpage.setLabel("다음");
+                nextpage.setBlockId(Block.list);
+                nextpage.setExtra(nextExtra);
+                Quicklist.add(nextpage);
+                log.info("다음 버튼 눌러서 현재 페이지 +1");
+            }
+
+
+        Quicklist.add(bu3);
         return kaResDto;
     }
 
@@ -395,8 +386,6 @@ public class ShopController {
             outputs.add(TextCardMap);
             return kaResDto;
         }
-
-
         if(extras.get("userId") == null || extras.get("userId").toString().isEmpty()){
 
             kaTextDTO.setTitle("사용자 정보에서 오류가 발생했습니다...!");
@@ -412,9 +401,6 @@ public class ShopController {
             outputs.add(TextCardMap);
             return kaResDto;
         }
-
-
-
         if(extras.get("Description") == null || extras.get("Description").toString().isEmpty()){
 
             kaTextDTO.setTitle("상품 설명 정보에서 오류가 발생했습니다...!");
@@ -483,49 +469,6 @@ public class ShopController {
         Map<String,String> parmMAp = kareq.getAction().getParams();
 
         // 파라미터 값 유효성 검사
-        if(parmMAp.get("order_name") == null || parmMAp.get("order_name").toString().isEmpty()){
-            kaTextDTO.setTitle("주문자 이름 정보에서 오류가 등장했네요...!");
-
-            // 버튼 설정
-            List<Button> buttons = new ArrayList<>();
-            Button ErrorBu = new Button();
-            ErrorBu.setLabel("다시하기");
-            ErrorBu.setBlockId(Block.order);
-            buttons.add(ErrorBu);
-            kaTextDTO.setButtons(buttons);
-
-            TextCardMap.put("textCard",kaTextDTO);
-            outputs.add(TextCardMap);
-            return kaResDto;
-        }
-        if(parmMAp.get("order_phone") == null || parmMAp.get("order_phone").toString().isEmpty()){
-            kaTextDTO.setTitle("주문자 전화번호 정보에서 오류가 등장했네요...!");
-
-            // 버튼 설정
-            List<Button> buttons = new ArrayList<>();
-            Button ErrorBu = new Button();
-            ErrorBu.setLabel("다시하기");
-            ErrorBu.setBlockId(Block.order);
-            buttons.add(ErrorBu);
-            kaTextDTO.setButtons(buttons);
-            TextCardMap.put("textCard",kaTextDTO);
-            outputs.add(TextCardMap);
-            return kaResDto;
-        }
-        if(parmMAp.get("reser_date") == null || parmMAp.get("reser_date").toString().isEmpty()){
-            kaTextDTO.setTitle("날짜 정보에서 오류가 등장했네요...!");
-
-            // 버튼 설정
-            List<Button> buttons = new ArrayList<>();
-            Button ErrorBu = new Button();
-            ErrorBu.setLabel("다시하기");
-            ErrorBu.setBlockId(Block.order);
-            buttons.add(ErrorBu);
-            kaTextDTO.setButtons(buttons);
-            TextCardMap.put("textCard",kaTextDTO);
-            outputs.add(TextCardMap);
-            return kaResDto;
-        }
 
 
         // 날짜 역직렬화 하기
@@ -609,6 +552,7 @@ public class ShopController {
             outputs.add(TextCardMap);
             return kaResDto;
         }
+
 
         log.info("주문자 정보 출력 시작");
         
@@ -844,7 +788,7 @@ public class ShopController {
             log.info("다음 페이지 추가");
             QuickReplies nextpage = new QuickReplies();
             Map<String,Object> nextExtra = new HashMap<>();
-            nextExtra.put("page",paging.getPage() + 1);
+            nextExtra.put("page",paging.getPage() +1);
             nextpage.setAction("block");
             nextpage.setLabel("다음");
             nextpage.setBlockId(Block.orderlist);
@@ -956,4 +900,67 @@ public class ShopController {
         return kaResDto;
     }
 
+
+    /**
+     * 검증 api(이름)
+     * @param req
+     * @return
+     */
+    @RequestMapping(value = "/checkName")
+    public ValidationResponse checkName(@RequestBody ValidationRequset req)
+    {
+        log.info("/jushop/checkName");
+        log.info(req);
+        ValidationResponse res = new ValidationResponse();
+
+
+        Value value= req.getValue();
+        Boolean isValidTypeKr= Pattern.matches(REGEXP_KR, value.getOrigin());
+        if(value.getOrigin()== null || value.getOrigin().isEmpty() || !isValidTypeKr)
+        {
+
+            res.setStatus("FAIL");
+            res.setMessage("주문자 이름이 잘못 되었습니다.");
+            res.setValue(value.getOrigin());
+
+        }
+        else
+        {
+            res.setStatus("SUCCESS");
+        }
+        log.info(res);
+        return res;
+    }
+
+    /**
+     * 검증 api( 핸드폰 번호)
+     * @param req
+     * @return
+     */
+    @RequestMapping(value = "/checkPhone")
+    public ValidationResponse checkPhone(@RequestBody ValidationRequset req)
+    {
+        log.info("/jushop/checkName");
+        log.info(req);
+        ValidationResponse res = new ValidationResponse();
+
+
+        Value value= req.getValue();
+        Boolean isValidTypePhone= Pattern.matches(REGEXP_Phone, value.getOrigin());
+        if(value.getOrigin()== null || value.getOrigin().isEmpty() || !isValidTypePhone)
+        {
+
+            res.setStatus("FAIL");
+            res.setMessage("주문자 번호가 잘못 되었습니다. ( - 제외)");
+            res.setValue(value.getOrigin());
+
+        }
+        else
+        {
+            res.setStatus("SUCCESS");
+        }
+        log.info(res);
+        return res;
+    }
 }
+

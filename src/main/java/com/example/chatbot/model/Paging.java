@@ -37,7 +37,6 @@ public class Paging {
     // ■ 전체 페이지 수를 구하는 메소드
     // pageSize : 한 페이지에 표시할 데이터(게시물)의 수
     // dataCount : 전체 데이터(게시물) 수
-    //                            10                 8
     public int getPageCount(int pageSize, int dataCount) {
         int pageCount = 0;
 

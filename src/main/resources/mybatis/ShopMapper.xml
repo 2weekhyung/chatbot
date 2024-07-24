@@ -56,6 +56,22 @@
 
     </select>
 
+    <insert id="insertProduct" parameterType="Producet">
+        INSERT into tbl_product(ProductNo,ProductName,ProductPrict,OrderPrice,DiscountPrice,ProductImg)
+        values ( #{ProductNo},#{ProductName},#{ProductPrict}
+                ,#{OrderPrice},#{DiscountPrice},#{ProductImg})
+    </insert>
+
+    <select id="selectProduct" parameterType="Paging" resultType="Producet">
+        SELECT ProductNo,ProductName,ProductPrict,ProductImg,OrderPrice,DiscountPrice
+        From tbl_product
+            LIMIT #{endPage} OFFSET #{startPage}
+    </select>
+
+    <select id="countProduct"  resultType="Integer">
+        SELECT count(*)
+        From tbl_product
+    </select>
 </mapper>
 
 

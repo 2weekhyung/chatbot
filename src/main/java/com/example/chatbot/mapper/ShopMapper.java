@@ -20,4 +20,11 @@ public interface ShopMapper {
     int updateOrder(Producet param);
 
     int countOrder(String userId );
+
+    int insertProduct(Producet param);
+
+    List<Producet> selectProduct(Paging param);
+
+    int countProduct();
+
 }

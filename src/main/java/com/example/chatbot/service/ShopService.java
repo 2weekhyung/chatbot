@@ -15,6 +15,18 @@ public class ShopService {
 
 
     /**
+     * 상품 입력
+     * @param param
+     * @return
+     */
+    public int insertProduct(Producet param){
+        return ShopMapper.insertProduct(param);
+    }
+    public List<Producet> selectProduct(Paging paging){
+        return ShopMapper.selectProduct(paging);
+    }
+
+    /**
      * 주문 입력
      * @param param
      * @return
@@ -49,4 +61,11 @@ public class ShopService {
         return ShopMapper.countOrder(userId );
     }
 
+    /**
+     * 상품 개수
+     * @return
+     */
+    public int countProduct(){
+        return ShopMapper.countProduct();
+    }
 }
