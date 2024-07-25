@@ -65,7 +65,7 @@
     <select id="selectProduct" parameterType="Paging" resultType="Producet">
         SELECT ProductNo,ProductName,ProductPrict,ProductImg,OrderPrice,DiscountPrice
         From tbl_product
-            LIMIT #{endPage} OFFSET #{startPage}
+            LIMIT #{pageSize} OFFSET #{startPage}
     </select>
 
     <select id="countProduct"  resultType="Integer">
