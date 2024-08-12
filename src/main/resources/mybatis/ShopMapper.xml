@@ -39,8 +39,8 @@
                  ,OrderPhone,OrderStatus
                  ,ReservrDate,OrderDate
             From tbl_order
-            where BotUserId = #{BotUserId}
-                LIMIT #{endPage} OFFSET #{startPage}
+            where BotUserId = #{BotUserId} and OrderStatus =01 or OrderStatus =03
+                LIMIT #{pageSize } OFFSET #{startPage}
         </select>
 
         <update id="updateOrder" parameterType="Producet">

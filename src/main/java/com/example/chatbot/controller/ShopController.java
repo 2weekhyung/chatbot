@@ -2,8 +2,10 @@ package com.example.chatbot.controller;
 
 import com.example.chatbot.mapper.ShopMapper;
 import com.example.chatbot.model.*;
+import com.example.chatbot.model.Block;
 import com.example.chatbot.req.*;
 import com.example.chatbot.res.*;
+import com.example.chatbot.service.CallBackService;
 import com.example.chatbot.service.ShopService;
 import com.example.chatbot.service.productService;
 
@@ -35,6 +37,8 @@ public class ShopController {
     private ShopService shopService;
     @Autowired
     private ShopMapper shopMapper;
+    @Autowired
+    private CallBackService callBackService;
 
     /**
      * 쇼핑 메인화면(66864b145be16c33805ac6bb)
@@ -118,13 +122,14 @@ public class ShopController {
         KakaoCarouselCardtResDto  carousel = new KakaoCarouselCardtResDto();
         carousel.setType("commerceCard");
 
+
+
         Paging paging = new Paging();
 
-        ////
+
         String pageStr;
         int currentPage =1;
 
-        ////
         if (kareq.getAction() != null && kareq.getAction().getClientExtra() != null) {
             Map<String,Object> extraMap = kareq.getAction().getClientExtra();
             Object pageObj = extraMap.get("page");
@@ -149,11 +154,11 @@ public class ShopController {
         paging.setTotalCnt(shopService.countProduct());
         log.info("전체데이터  값 : " + paging.getTotalCnt());
         // 전체 페이지 개수 구하기
-        int totalPage=paging.getPageCount(paging.getPageSize(),paging.getTotalCnt());
-        log.info("전체 페이지 값 : " + totalPage);
-        log.info("현재 페이지 값 : " + paging.getPage());
-        log.info("Start 페이지 값 : " + paging.getStartPage());
-        log.info("End 페이지 값 : " + paging.getEndPage());
+            int totalPage=paging.getPageCount(paging.getPageSize(),paging.getTotalCnt());
+            log.info("전체 페이지 값 : " + totalPage);
+            log.info("현재 페이지 값 : " + paging.getPage());
+            log.info("Start 페이지 값 : " + paging.getStartPage());
+            log.info("End 페이지 값 : " + paging.getEndPage());
         //
 
         // 상품 정보 담을 리스트
@@ -237,29 +242,32 @@ public class ShopController {
             // 현재 페이지가 마지막 페이지일 때
             else if (paging.getPage() == totalPage) {
                 log.info("현재 페이지가 마지막 페이지");
+
                 QuickReplies previouspage = new QuickReplies();
-                Map<String,Object> previousExtra = new HashMap<>();
-                previousExtra.put("page",paging.getPage() - 1);
+                Map<String, Object> previousExtra = new HashMap<>();
+                previousExtra.put("page", paging.getPage() - 1);
                 previouspage.setAction("block");
                 previouspage.setLabel("이전");
                 previouspage.setBlockId(Block.list);
+                previouspage.setExtra(previousExtra);
                 Quicklist.add(previouspage);
-                log.info("다음 버튼 눌러서 현재 페이지 -1");
-            }
-            else {
-                log.info("다음 이전 버튼 둘다 있는 페이지");
+                log.info("이전 버튼 눌러서 현재 페이지 -1");
+            } else {
+                log.info("다음 이전 버튼 둘 다 있는 페이지");
+
                 QuickReplies previouspage = new QuickReplies();
-                Map<String,Object> previousExtra = new HashMap<>();
-                previousExtra.put("page",paging.getPage()-1);
+                Map<String, Object> previousExtra = new HashMap<>();
+                previousExtra.put("page", paging.getPage() - 1);
                 previouspage.setAction("block");
                 previouspage.setLabel("이전");
                 previouspage.setBlockId(Block.list);
+                previouspage.setExtra(previousExtra);
                 Quicklist.add(previouspage);
-                log.info("다음 버튼 눌러서 현재 페이지 -1");
+                log.info("이전 버튼 눌러서 현재 페이지 -1");
 
                 QuickReplies nextpage = new QuickReplies();
-                Map<String,Object> nextExtra = new HashMap<>();
-                nextExtra.put("page",paging.getPage()+1);
+                Map<String, Object> nextExtra = new HashMap<>();
+                nextExtra.put("page", paging.getPage() + 1);
                 nextpage.setAction("block");
                 nextpage.setLabel("다음");
                 nextpage.setBlockId(Block.list);
@@ -267,10 +275,12 @@ public class ShopController {
                 Quicklist.add(nextpage);
                 log.info("다음 버튼 눌러서 현재 페이지 +1");
             }
-
-
         Quicklist.add(bu3);
-        return kaResDto;
+
+        //callBackService.reqCallBack(kareq,kaResDto);
+        shopService.callboack(kareq.getUserRequest().getCallbackUrl(),kaResDto );
+        //return kaResDto;
+        return callBackService.callback();
     }
 
 
@@ -753,6 +763,17 @@ public class ShopController {
                 bu2.setExtra(extra1);
             buttons.add(bu2);
 
+            Button bu3 = new Button();
+            bu3.setLabel("주문자 정보 수정");
+            bu3.setAction("block");
+            bu3.setBlockId(Block.orderconfrim);
+            // extra 설정
+            Map<String, Object> extra3 = new HashMap<>();
+            extra3.put("orderStatus","02");
+            extra3.put("ProductNo",product.getOrderNo());
+            bu3.setExtra(extra3);
+            buttons.add(bu3);
+
             itemCardDto.setButtons(buttons);
             ListItems.add(itemCardDto);
 
@@ -798,37 +819,43 @@ public class ShopController {
         // 현재 페이지가 마지막 페이지일 때
         else if (paging.getPage() == totalPage) {
             log.info("현재 페이지가 마지막 페이지");
-                QuickReplies previouspage = new QuickReplies();
-                Map<String,Object> previousExtra = new HashMap<>();
-                previousExtra.put("page",paging.getPage() - 1);
 
-                previouspage.setAction("block");
-                previouspage.setLabel("이전");
-                previouspage.setBlockId(Block.orderlist);
-                Quicklist.add(previouspage);
-        }
-        else {
-            log.info("다음 이전 버튼 둘다 있는 페이지");
             QuickReplies previouspage = new QuickReplies();
-            Map<String,Object> previousExtra = new HashMap<>();
-            previousExtra.put("page",paging.getPage()-1);
-
+            Map<String, Object> previousExtra = new HashMap<>();
+            previousExtra.put("page", paging.getPage() - 1);
             previouspage.setAction("block");
             previouspage.setLabel("이전");
             previouspage.setBlockId(Block.orderlist);
+            previouspage.setExtra(previousExtra);
             Quicklist.add(previouspage);
+            log.info("이전 버튼 눌러서 현재 페이지 -1");
+        } else {
+            log.info("다음 이전 버튼 둘 다 있는 페이지");
+
+            QuickReplies previouspage = new QuickReplies();
+            Map<String, Object> previousExtra = new HashMap<>();
+            previousExtra.put("page", paging.getPage() - 1);
+            previouspage.setAction("block");
+            previouspage.setLabel("이전");
+            previouspage.setBlockId(Block.orderlist);
+            previouspage.setExtra(previousExtra);
+            Quicklist.add(previouspage);
+            log.info("이전 버튼 눌러서 현재 페이지 -1");
 
             QuickReplies nextpage = new QuickReplies();
-            Map<String,Object> nextExtra = new HashMap<>();
-            nextExtra.put("page",paging.getPage()+1);
+            Map<String, Object> nextExtra = new HashMap<>();
+            nextExtra.put("page", paging.getPage() + 1);
             nextpage.setAction("block");
             nextpage.setLabel("다음");
+
             nextpage.setBlockId(Block.orderlist);
             nextpage.setExtra(nextExtra);
             Quicklist.add(nextpage);
+            log.info("다음 버튼 눌러서 현재 페이지 +1");
         }
 
-        log.info("return 값 : " + kaResDto);
+
+        //log.info("return 값 : " + kaResDto);
         return kaResDto;
     }
 
